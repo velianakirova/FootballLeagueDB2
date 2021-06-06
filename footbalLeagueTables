@@ -1,0 +1,171 @@
+CREATE TABLE PROFESSIONAL_LEAGUES(
+    division varchar(15) not null PRIMARY KEY
+);
+
+CREATE TABLE TEAMS(
+    name varchar(20) not null,
+    city varchar(20) not null,
+    website varchar(50),
+    phone varchar(15) not null,
+    oColor varchar(15) not null,
+    rColor varchar(15) not null,
+    founded date not null,
+    capitanIDnum varchar(15),
+    stadiumName varchar(30) not null,
+    stadiumAddress varchar(50) not null,
+    PRIMARY KEY (name,city)
+);
+
+CREATE TABLE PLAYERS(
+  IDnum varchar(15) not null PRIMARY KEY,
+  playerName varchar(50) not null,
+  playerAge INTEGER not null,
+  nation varchar(5) not null,
+  position varchar(15) not null,
+  allMatches INTEGER not null,
+  teamName varchar(20),
+  teamCity varchar(20),
+  rcNum varchar(10) not null unique, -- registration card number
+  FOREIGN KEY (teamName,teamCity) REFERENCES TEAMS(name,city)
+);
+
+ALTER TABLE TEAMS
+ADD CONSTRAINT FK_CAPITAN_ID
+FOREIGN KEY (capitanIDnum) REFERENCES PLAYERS(IDnum);
+
+CREATE TABLE TEAM_OWNERS(
+  ownerEGN varchar(12) not null PRIMARY KEY,
+  ownerName varchar(50) not null
+);
+
+CREATE TABLE OWNS(
+  teamOwnerEGN varchar(12) not null,
+  teamName varchar(20) not null,
+  teamCity varchar(20) not null,
+  PRIMARY KEY (teamOwnerEGN,teamName,teamCity),
+  FOREIGN KEY (teamOwnerEGN) REFERENCES TEAM_OWNERS(ownerEGN),
+  FOREIGN KEY (teamName, teamCity) REFERENCES TEAMS(name,city)
+);
+
+CREATE TABLE MANAGERS(
+  mName varchar(50) not null,
+  mPosition varchar(15) not null,
+  managedTeamName varchar(20) not null,
+  managedTeamCity varchar(20) not null,
+  PRIMARY KEY (mName, mPosition),
+  FOREIGN KEY (managedTeamName, managedTeamCity) REFERENCES TEAMS(name,city)
+);
+
+CREATE TABLE STADIUMS(
+  stadiumName varchar(20) not null,
+  stadiumAddress varchar(50) not null unique,
+  city varchar(20) not null ,
+  capacity INTEGER not null,
+  teamName varchar(20),
+  teamCity varchar(20),
+  PRIMARY KEY (stadiumName,stadiumAddress),
+  FOREIGN KEY (teamName, teamCity) REFERENCES TEAMS(name, city)
+);
+
+ALTER TABLE TEAMS
+ADD CONSTRAINT FK_STADIUM
+FOREIGN KEY (stadiumName, stadiumAddress) REFERENCES STADIUMS(stadiumName, stadiumAddress);
+
+
+CREATE TABLE COACHES(
+    cName varchar(50) not null,
+    cNation varchar(5) not null,
+    cAge INTEGER not null ,
+    expYears INTEGER not null, --experience in years
+    teamName varchar(20),
+    teamCity varchar(20),
+    contractSDate date not null,
+    contractEDate date not null,
+    salary INTEGER not null,
+    PRIMARY KEY (cName, cNation),
+    FOREIGN KEY (teamName,teamCity) REFERENCES TEAMS(name, city)
+);
+
+CREATE TABLE MATCHES(
+  mDate date not null,
+  startsAt varchar(6) not null,
+  homeTeamName varchar(20) not null,
+  homeTeamCity varchar(20) not null,
+  awayTeamName varchar(20) not null,
+  awayTeamCity varchar(20) not null,
+  stadiumName varchar(20) not null,
+  stadiumAddress varchar(50) not null,
+  leagueDivision varchar(15) not null,
+  PRIMARY KEY (mDate, startsAt, homeTeamName, homeTeamCity, awayTeamName, awayTeamCity),
+  FOREIGN KEY (homeTeamName, homeTeamCity) REFERENCES TEAMS(name, city),
+  FOREIGN KEY (awayTeamName, awayTeamCity) REFERENCES TEAMS(name, city),
+  FOREIGN KEY (stadiumName, stadiumAddress) REFERENCES STADIUMS(stadiumName, stadiumAddress),
+  FOREIGN KEY (leagueDivision) REFERENCES PROFESSIONAL_LEAGUES(division)
+);
+
+CREATE TABLE REFEREE(
+  refEGN varchar(12) not null PRIMARY KEY,
+  refName varchar(50) not null,
+  refCity varchar(20) not null,
+  allMatches INTEGER not null,
+  interQualif varchar(5)
+);
+
+CREATE TABLE REFEREE_OF(
+  mDate date not null,
+  startsAt varchar(6) not null,
+  homeTeamName varchar(20) not null,
+  homeTeamCity varchar(20) not null,
+  awayTeamName varchar(20) not null,
+  awayTeamCity varchar(20) not null,
+  rEGN varchar(12) not null,
+  PRIMARY KEY (mDate,startsAt,homeTeamName,homeTeamCity,awayTeamName,awayTeamCity,rEGN)
+);
+
+
+ALTER TABLE REFEREE_OF
+ADD CONSTRAINT FK_MATCH
+FOREIGN KEY (mDate, startsAt, homeTeamName, homeTeamCity,awayTeamName,awayTeamCity) 
+REFERENCES MATCHES(mDate, startsAt, homeTeamName,homeTeamCity,awayTeamName,awayTeamCity);
+
+ALTER TABLE REFEREE_OF
+ADD CONSTRAINT FK_REFEREE
+FOREIGN KEY (rEGN) REFERENCES REFEREE(refEGN);
+
+CREATE TABLE DELEGATES(
+  delEGN varchar(12) not null PRIMARY KEY,
+  delName varchar(50) not null,
+  delCity varchar(20) not null,
+  allMatches INTEGER not null
+);
+
+
+CREATE TABLE DELEGATE_OF(
+  mDate date not null,
+  startsAt varchar(6) not null,
+  homeTeamName varchar(20) not null,
+  homeTeamCity varchar(20) not null,
+  awayTeamName varchar(20) not null,
+  awayTeamCity varchar(20) not null,
+  dEGN varchar(12) not null,
+  PRIMARY KEY (mDate,startsAt,homeTeamName,homeTeamCity,awayTeamName,awayTeamCity,dEGN)
+);
+
+ALTER TABLE DELEGATE_OF
+ADD CONSTRAINT FK_MATCH
+FOREIGN KEY (mDate, startsAt, homeTeamName, homeTeamCity,awayTeamName,awayTeamCity) REFERENCES MATCHES(mDate, startsAt, homeTeamName,homeTeamCity,awayTeamName,awayTeamCity);
+
+ALTER TABLE DELEGATE_OF
+ADD CONSTRAINT FK_DELEGATE
+FOREIGN KEY (dEGN) REFERENCES DELEGATES(delEGN);
+
+ALTER TABLE TEAMS
+ADD playsInDivision varchar(15);
+
+ALTER TABLE TEAMS
+ADD CONSTRAINT FK_PROFESSIONAL_LEAGUE
+FOREIGN KEY (playsInDivision) REFERENCES PROFESSIONAL_LEAGUES(division);
+
+ALTER TABLE COACHES
+ADD CONSTRAINT FK_CONTRACT_WITH
+FOREIGN KEY (teamName, teamCity) REFERENCES TEAMS(name, city);
