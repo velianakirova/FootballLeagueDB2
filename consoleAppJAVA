@@ -1,0 +1,309 @@
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.Random;
+import java.util.Scanner;
+
+public class FootballLeague {
+
+    private Connection connection;
+    private Statement statement;
+    private ResultSet resultSet;
+
+
+    public void openConnection(){
+
+// Step 1: Load IBM DB2 JDBC driver
+
+        try {
+
+            DriverManager.registerDriver(new com.ibm.db2.jcc.DB2Driver());
+
+        }
+
+        catch(Exception cnfex) {
+
+            System.out.println("Problem in loading or registering IBM DB2 JDBC driver");
+            cnfex.printStackTrace();
+        }
+
+// Step 2: Opening database connection
+
+
+        try {
+
+            connection = DriverManager.getConnection("jdbc:db2://62.44.108.24:50000/SAMPLE", "db2admin", "db2admin");
+
+            statement = connection.createStatement();
+
+        }
+
+        catch(SQLException s){
+
+            s.printStackTrace();
+
+        }
+
+    }
+
+    public void closeConnection(){
+
+        try {
+
+            if(null != connection) {
+
+                // cleanup resources, once after processing
+
+                resultSet.close();
+
+                statement.close();
+
+
+                // and then finally close connection
+
+                connection.close();
+
+            }
+
+        }
+
+        catch (SQLException s) {
+
+            s.printStackTrace();
+
+        }
+
+    }
+
+    public void select(String stmnt, int column) {
+
+        try{
+
+            resultSet = statement.executeQuery(stmnt);
+
+            String result = "";
+
+            while(resultSet.next()) {
+
+                for (int i = 1; i <= column; i++) {
+
+                    result += resultSet.getString(i);
+
+                    if (i == column) result += " \n";
+                    else             result += ", ";
+                }
+            }
+
+            //System.out.println("Executing query: " + stmnt + "\n");
+            //System.out.println("Result output \n");
+            //System.out.println("---------------------------------- \n");
+            System.out.println(result);
+
+        }
+        catch (SQLException s)
+        {
+            s.printStackTrace();
+        }
+
+    }
+
+    public void insert(String stmnt) {
+
+        try{
+
+            statement.executeUpdate(stmnt);
+
+        }
+
+        catch (SQLException s){
+
+            s.printStackTrace();
+
+        }
+
+        System.out.println("Successfully inserted!");
+
+    }
+
+
+    public void delete(String stmnt) {
+
+        try{
+
+            statement.executeUpdate(stmnt);
+
+        }
+
+        catch (SQLException s){
+
+            s.printStackTrace();
+
+        }
+
+        System.out.println("Successfully deleted!");
+
+    }
+
+    public static void main(String[] args) {
+
+        FootballLeague db2Obj = new FootballLeague();
+        String stmnt = "";
+
+        db2Obj.openConnection();
+
+
+        System.out.println("-------------------- \n|       MENU       |\n-------------------- " +
+
+                "\n| 1. | ALL MATCHES |\n| 2. | ALL TEAMS   |\n| 3. | ALL COACHES | " +
+                "\n| 4. | ALL PLAYERS |\n| 5. | INSERT      |\n| 6. | DELETE      |" +
+                "\n| 7. | EXIT      |" +"\n-------------------- ");
+
+        Scanner input = new Scanner (System.in);
+        System.out.println("Your choice: ");
+        int choice = input.nextInt();
+
+        while(choice!=7){
+            if(choice == 1){
+                System.out.println("ALL MATCHES\nHOME    DATE     HOUR    AWAY");
+                stmnt = "SELECT *" +
+                        "FROM FN71929.ALL_MATCHES";
+                db2Obj.select(stmnt, 4);
+                System.out.println("Your next choice: ");
+                choice = input.nextInt();
+            }
+            else if (choice == 2){
+                System.out.println("ALL TEAMS\nNAME    CITY     STADIUM    DIVISION");
+                stmnt = "SELECT *" +
+                        "FROM FN71929.TEAM_SHORT_INFO";
+                db2Obj.select(stmnt, 4);
+                System.out.println("Your next choice: ");
+                choice = input.nextInt();
+            } else if (choice==3){
+                System.out.println("ALL COACHES\nNAME       NATION       AGE    COACH OF TEAM");
+                stmnt = "SELECT *" +
+                        "FROM FN71929.COACH_SHORT_INFO";
+                db2Obj.select(stmnt, 5);
+                System.out.println("Your next choice: ");
+                choice = input.nextInt();
+            } else if (choice == 4){
+                System.out.println("ALL PLAYERS\nNAME             AGE  NATION  COACH OF TEAM");
+                stmnt = "SELECT *" +
+                        "FROM FN71929.PLAYERS_SHORT_INFO";
+                db2Obj.select(stmnt, 5);
+                System.out.println("Your next choice: ");
+                choice = input.nextInt();
+            } else if(choice == 5){
+                System.out.println("INSERT\nYour options:\nPLAYER / MANAGER / OWNER ");
+                String choiceInsert = input.next();
+                if(choiceInsert.equals("PLAYER")){
+                    System.out.println();
+                    System.out.println("First name: ");
+                    String firstName = input.next();
+                    System.out.println("Last name: ");
+                    String lastName = input.next();
+                    System.out.println("Age: ");
+                    String age = input.next();
+                    System.out.println("Nation: ");
+                    String nation = input.next();
+                    System.out.println("Position: ");
+                    String position = input.next();
+                    System.out.println("Matches: ");
+                    String matches = input.next();
+                    System.out.println("Team name: ");
+                    String teamName = input.next();
+                    System.out.println("Team city: ");
+                    String teamCity = input.next();
+                    System.out.println("Card number: ");
+                    String num = input.next();
+                    Random rand = new Random();
+
+                    stmnt = " INSERT INTO FN71929.PLAYERS(IDNUM, PLAYERNAME, PLAYERAGE, NATION, POSITION, ALLMATCHES, TEAMNAME, TEAMCITY, RCNUM)"
+                            + " VALUES ('" + (rand.nextInt(100000000) + 10000000) + "','" + (firstName + " "+lastName)
+                            + "','" + age + "','" + nation+ "','" + position+ "','" + matches
+                            + "','" + teamName + "','" + teamCity+ "','" + num  + "')";
+
+                    db2Obj.insert(stmnt);
+
+                } else if (choiceInsert.equals("MANAGER")){
+
+                    System.out.println();
+                    System.out.println("First name: ");
+                    String firstName = input.next();
+                    System.out.println("Last name: ");
+                    String lastName = input.next();
+                    System.out.println("Position: ");
+                    String position = input.next();
+                    System.out.println("Team name: ");
+                    String teamName = input.next();
+                    System.out.println("Team city: ");
+                    String teamCity = input.next();
+                    stmnt = " INSERT INTO FN71929.MANAGERS(MNAME, MPOSITION, MANAGEDTEAMNAME, MANAGEDTEAMCITY)"
+                            + " VALUES ('" + (firstName + " "+lastName) + "','" + position
+                            + "','" + teamName + "','" + teamCity + "')";
+
+                    db2Obj.insert(stmnt);
+
+                } else if (choiceInsert.equals("OWNER")){
+                    System.out.println();
+                    System.out.println("First name: ");
+                    String firstName = input.next();
+                    System.out.println("Last name: ");
+                    String lastName = input.next();
+                    System.out.println("EGN: ");
+                    String egn = input.next();
+
+                    stmnt = " INSERT INTO FN71929.TEAM_OWNERS(OWNEREGN, OWNERNAME)"
+                            + " VALUES ('" + egn + "','" + (firstName + " "+lastName) + "')";
+
+                    db2Obj.insert(stmnt);
+                }
+
+                System.out.println("Your next choice: ");
+                choice = input.nextInt();
+            } else if(choice == 6){
+
+                System.out.println("DELETE\nYour options:\nMANAGER / OWNER ");
+                String choiceDelete = input.next();
+                if(choiceDelete.equals("OWNER")){
+
+                    System.out.println();
+                    System.out.println("EGN: ");
+                    String egn = input.next();
+
+                    stmnt = "DELETE FROM FN71929.TEAM_OWNERS " +
+                            "WHERE OWNEREGN = '" + egn + "'";
+                    db2Obj.delete(stmnt);
+                } else if (choiceDelete.equals("MANAGER")){
+                    System.out.println();
+                    System.out.println("First name: ");
+                    String firstName = input.next();
+                    System.out.println("Last name: ");
+                    String lastName = input.next();
+                    System.out.println("Position: ");
+                    String position = input.next();
+
+                    stmnt = "DELETE FROM FN71929.MANAGERS " +
+                            "WHERE MNAME = '" + (firstName+" "+lastName) + "' " +
+                            "AND MPOSITION = '" + position + "'";
+                    db2Obj.delete(stmnt);
+                }
+
+                System.out.println("Your next choice: ");
+                choice = input.nextInt();
+            }else{
+
+                System.out.println("INVALID ACTION. Your next choice: ");
+                choice = input.nextInt();
+            }
+
+
+        }
+
+        db2Obj.closeConnection();
+
+    }
+
+}
